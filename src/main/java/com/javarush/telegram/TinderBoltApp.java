@@ -47,8 +47,7 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
       System.out.println("mess: " + mess); // аналогично System.out.println(update.getMessage().getText());
 
       if (mess.equals("/stop")) {
-        currentMode = null;
-        mainMenu();
+        stop();
         return;
       }
 
@@ -84,11 +83,7 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
 
       switch (key) {
         case "start" -> start();
-        case "stop" -> {
-          currentMode = null;
-          mainMenu();
-          System.out.println(currentMode);
-        }
+        case "stop" -> stop();
       }
 
 //      if (key.equals("start")) {
@@ -109,6 +104,12 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
     String text = loadMessage("main");
     sendTextMessage(text);
     mainMenu();
+  }
+
+  public void stop() {
+    currentMode = null;
+    mainMenu();
+    System.out.println(currentMode);
   }
 
   public void chatGptMode() {
