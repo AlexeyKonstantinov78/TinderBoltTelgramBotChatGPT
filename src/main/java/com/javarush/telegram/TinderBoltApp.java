@@ -41,6 +41,8 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
   public void onUpdateEventReceived(Update update) {
     //TODO: основной функционал бота будем писать здесь
     String mess = getMessageText();
+    // получаем данные от нажатой кнопки
+    String key = getCallbackQueryButtonKey();
 
     if (!mess.isEmpty()) {
       // получение сообщений для бота
@@ -53,6 +55,11 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
 
       if (mess.equals("/start")) {
         start();
+        return;
+      }
+
+      if (mess.equals("/date")) {
+        correspondenceStars();
         return;
       }
 
@@ -69,32 +76,53 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
         return;
       }
 
+      if (currentMode == DialogMode.DATE) {
+        String send = chatGPT.addMessage(mess);
+        sendTextMessage(send);
+        mainMenu();
+        return;
+      }
+
       sendTextMessage("*Привет*");
       sendTextMessage("_Как дела?_");
     }
 
     // сообщение с кнопками
-    sendTextButtonsMessage("Выберете режим работы", "Старт", "start", "Стоп", "stop");
-    // получаем данные от нажатой кнопки
-    String key = getCallbackQueryButtonKey();
+    sendTextButtonsMessage("Выберете режим работы",
+            "Старт", "start",
+            "Переписка со звездами", "date",
+            "Стоп", "stop");
 
     if (!key.isEmpty()) {
       System.out.println("getCallbackQueryButtonKey(): " + getCallbackQueryButtonKey());
 
       switch (key) {
         case "start" -> start();
+        case "date" -> correspondenceStars();
         case "stop" -> stop();
       }
 
-//      if (key.equals("start")) {
-//        start();
-//      }
-//
-//      if (key.equals("stop")) {
-//        currentMode = null;
-//        mainMenu();
-//      }
+      if (currentMode == DialogMode.DATE && key.startsWith("date_")) {
+        sendPhotoMessage(key);
+        sendTextMessage("Отличный выбор");
+        chatGPT.setPrompt(loadPrompt(key));
+      }
     }
+  }
+
+  private void correspondenceStars() {
+    currentMode = DialogMode.DATE;
+    sendPhotoMessage("date");
+    String text = loadMessage("date");
+    sendTextMessage(text);
+    sendTextButtonsMessage("Выберите девушку",
+            "Ариана Гранде", "date_grande",
+            "Марго Робби", "date_robbie",
+            "Зендея", "date_zendaya",
+            "Райан Гослинг", "date_gosling",
+            "Том Харди", "date_hardy"
+    );
+    mainMenu();
   }
 
   public void start() {
