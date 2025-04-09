@@ -1,6 +1,7 @@
 package com.javarush.telegram;
 
 import org.telegram.telegrambots.meta.TelegramBotsApi;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
@@ -8,6 +9,7 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Properties;
 
 public class TinderBoltApp extends MultiSessionTelegramBot {
@@ -16,6 +18,7 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
   public static String OPEN_AI_TOKEN; //TODO: добавь токен ChatGPT в кавычках
   private ChatGPTService chatGPT;
   private DialogMode currentMode = null;
+  private ArrayList<String> list = new ArrayList<>();
 
   static {
     Properties props = new Properties();
@@ -70,15 +73,29 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
 
       if (currentMode == DialogMode.GPT) {
         String prompt = loadPrompt("gpt");
+        Message msg = sendTextMessage("Подождите чат думает...");
         String send = chatGPT.sendMessage(prompt, mess);
-        sendTextMessage(send);
+        updateTextMessage(msg, send);
         mainMenu();
         return;
       }
 
       if (currentMode == DialogMode.DATE) {
+        Message msg = sendTextMessage("Подождите чат думает...");
         String send = chatGPT.addMessage(mess);
-        sendTextMessage(send);
+        updateTextMessage(msg, send);
+        mainMenu();
+        return;
+      }
+
+      // command MESSAGE
+      if (mess.equals("/message")) {
+        commandMess();
+        return;
+      }
+
+      if (currentMode == DialogMode.MESSAGE) {
+        list.add(mess);
         mainMenu();
         return;
       }
@@ -88,16 +105,20 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
     }
 
     // сообщение с кнопками
-    sendTextButtonsMessage("Выберете режим работы",
-            "Старт", "start",
-            "Переписка со звездами", "date",
-            "Стоп", "stop");
+    if (currentMode == null) {
+      sendTextButtonsMessage("Выберете режим работы",
+              "Старт", "start",
+              "Переписка от вашего имени", "message",
+              "Переписка со звездами", "date",
+              "Стоп", "stop");
+    }
 
     if (!key.isEmpty()) {
       System.out.println("getCallbackQueryButtonKey(): " + getCallbackQueryButtonKey());
 
       switch (key) {
         case "start" -> start();
+        case "message" -> commandMess();
         case "date" -> correspondenceStars();
         case "stop" -> stop();
       }
@@ -107,7 +128,28 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
         sendTextMessage("Отличный выбор");
         chatGPT.setPrompt(loadPrompt(key));
       }
+
+      if (currentMode == DialogMode.MESSAGE && key.startsWith("message_")) {
+        String promt = loadPrompt(key);
+        String userChatHistory = String.join("\n\n", list);
+
+        Message msg = sendTextMessage("Подождите чат думает..."); // техническое сообщение
+        String answer = chatGPT.sendMessage(promt, userChatHistory);
+        updateTextMessage(msg, answer); // изменяет тех сообщение на полученное
+        //sendTextMessage(answer);
+        list.add(answer);
+      }
+
     }
+  }
+
+  private void commandMess() {
+    currentMode = DialogMode.MESSAGE;
+    sendPhotoMessage("message");
+    sendTextButtonsMessage("Пришлите в чат вашу переписку",
+            "Следующее сообщение", "message_next",
+            "Пригласить на свидание", "message_date");
+
   }
 
   private void correspondenceStars() {
