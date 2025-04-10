@@ -52,41 +52,35 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
     if (!mess.isEmpty()) {
       // получение сообщений для бота
       System.out.println("mess: " + mess); // аналогично System.out.println(update.getMessage().getText());
-
-      if (mess.equals("/stop")) {
-        stop();
-        return;
-      }
-
-      if (mess.equals("/start")) {
-        start();
-        return;
-      }
-
-      if (mess.equals("/profile")) {
-        addProfileTinder();
-        return;
-      }
-
-      if (mess.equals("/opener")) {
-        openerMessage();
-        return;
-      }
-
-      // command MESSAGE
-      if (mess.equals("/message")) {
-        commandMess();
-        return;
-      }
-
-      if (mess.equals("/date")) {
-        correspondenceStars();
-        return;
-      }
-
-      if (mess.equals("/gpt")) {
-        chatGptMode();
-        return;
+      switch (mess) {
+        case "/stop" -> {
+          stop();
+          return;
+        }
+        case "/start" -> {
+          start();
+          return;
+        }
+        case "/profile" -> {
+          addProfileTinder();
+          return;
+        }
+        case "/opener" -> {
+          openerMessage();
+          return;
+        }
+        case "/message" -> {
+          commandMess();
+          return;
+        }
+        case "/date" -> {
+          correspondenceStars();
+          return;
+        }
+        case "/gpt" -> {
+          chatGptMode();
+          return;
+        }
       }
 
       if (currentMode == DialogMode.PROFILE && !isMessageCommand()) {
@@ -226,7 +220,6 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
         //sendTextMessage(answer);
         list.add(answer);
       }
-
     }
   }
 
