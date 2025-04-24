@@ -1,5 +1,6 @@
 package com.javarush.telegram;
 
+import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -12,6 +13,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Properties;
 
+@Slf4j
 public class TinderBoltApp extends MultiSessionTelegramBot {
   public static String TELEGRAM_BOT_NAME; //TODO: добавь имя бота в кавычках
   public static String TELEGRAM_BOT_TOKEN; //TODO: добавь токен бота в кавычках
@@ -33,7 +35,8 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
       OPEN_AI_TOKEN = props.getProperty("open.ai.token");
 
     } catch (IOException e) {
-      System.err.println("Ошибка загрузки config.properties: " + e.getMessage());
+      log.error("Ошибка загрузки config.properties: " + e.getMessage());
+      //System.err.println("Ошибка загрузки config.properties: " + e.getMessage());
     }
   }
 
@@ -42,15 +45,24 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
     this.chatGPT = new ChatGPTService(OPEN_AI_TOKEN);
   }
 
+
   @Override
   public void onUpdateEventReceived(Update update) {
+    log.info(update.toString());
     String mess = getMessageText();
     // получаем данные от нажатой кнопки
     String key = getCallbackQueryButtonKey();
 
-    if (!mess.isEmpty()) {
+    if (currentMode != null) {
+      log.info("currentMode: " + currentMode.name());
+    } else {
+      log.info("currentMode: null");
+    }
+
+    if (!mess.isEmpty() && mess != null) {
       // получение сообщений для бота
-      System.out.println("mess: " + mess); // аналогично System.out.println(update.getMessage().getText());
+      log.info("mess: " + mess);
+      // System.out.println("mess: " + mess); // аналогично System.out.println(update.getMessage().getText());
       switch (mess) {
         case "/stop" -> {
           stop();
@@ -109,14 +121,16 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
           case 5:
             String answer = "";
             me.goals = mess;
-            System.out.println(me.toString());
+            log.info(me.toString());
+            //System.out.println(me.toString());
             String aboutMyself = me.toString();
             Message msg = sendTextMessage("Подождите чат думает...");
             try {
               answer = chatGPT.sendMessage(loadPrompt("profile"), aboutMyself);
 
             } catch (Exception e) {
-              System.out.println(e.getMessage());
+              log.error(e.getMessage());
+              //System.out.println(e.getMessage());
               updateTextMessage(msg, "Что-то пошло не так");
               return;
             }
@@ -153,14 +167,15 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
           case 5:
             me.goals = mess;
             String answer = "";
-
-            System.out.println(me.toString());
+            log.info(me.toString());
+            //System.out.println(me.toString());
             String aboutFreand = mess;
             Message msg = sendTextMessage("Подождите чат думает...");
             try {
               answer = chatGPT.sendMessage(loadPrompt("opener"), aboutFreand);
             } catch (Exception e) {
-              System.out.println(e.getMessage());
+              log.error(e.getMessage());
+              //System.out.println(e.getMessage());
               updateTextMessage(msg, "Что-то пошло не так");
               return;
             }
@@ -177,7 +192,8 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
         try {
           send = chatGPT.sendMessage(prompt, mess);
         } catch (Exception e) {
-          System.out.println(e.getMessage());
+          log.error(e.getMessage());
+          //System.out.println(e.getMessage());
           updateTextMessage(msg, "Что-то пошло не так");
           return;
         }
@@ -193,7 +209,8 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
           send = chatGPT.addMessage(mess);
 
         } catch (Exception e) {
-          System.out.println(e.getMessage());
+          log.error(e.getMessage());
+          //System.out.println(e.getMessage());
           updateTextMessage(msg, "Что-то пошло не так");
           return;
         }
@@ -224,7 +241,8 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
     }
 
     if (!key.isEmpty()) {
-      System.out.println("getCallbackQueryButtonKey(): " + getCallbackQueryButtonKey());
+      log.info("getCallbackQueryButtonKey(): " + getCallbackQueryButtonKey());
+      //System.out.println("getCallbackQueryButtonKey(): " + getCallbackQueryButtonKey());
 
       switch (key) {
         case "start" -> start();
@@ -247,7 +265,8 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
         try {
           answer = chatGPT.sendMessage(promt, userChatHistory);
         } catch (Exception e) {
-          System.out.println(e.getMessage());
+          log.error(e.getMessage());
+          //System.out.println(e.getMessage());
           updateTextMessage(msg, "Что-то пошло не так");
           return;
         }
@@ -314,7 +333,8 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
   public void stop() {
     currentMode = null;
     mainMenu();
-    System.out.println(currentMode);
+    //log.info("currentMode = null");
+    //System.out.println(currentMode);
   }
 
   public void chatGptMode() {
