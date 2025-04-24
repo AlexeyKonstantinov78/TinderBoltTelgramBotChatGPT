@@ -36,7 +36,7 @@ public class ChatGPTService {
    * prompt - контектс вопроса
    * question - сам запрос
    */
-  public String sendMessage(String prompt, String question) {
+  public String sendMessage(String prompt, String question) throws Exception {
     Message system = Message.ofSystem(prompt);
     Message message = Message.of(question);
     messageHistory = new ArrayList<>(Arrays.asList(system, message));
@@ -57,7 +57,7 @@ public class ChatGPTService {
    * Запросы к ChatGPT с сохранением истории сообщений.
    * Метод addMessage() добавляет новый вопрос (сообщение) в чат.
    */
-  public String addMessage(String question) {
+  public String addMessage(String question) throws Exception {
     Message message = Message.of(question);
     messageHistory.add(message);
 
@@ -68,7 +68,7 @@ public class ChatGPTService {
    * Отправляем ChatGPT серию сообщений: prompt, message1, answer1, message2, answer2, ..., messageN
    * Ответ ChatGPT добавляется в конец messageHistory для последующейго использования
    */
-  private String sendMessagesToChatGPT() {
+  private String sendMessagesToChatGPT() throws Exception {
     ChatCompletion chatCompletion = ChatCompletion.builder()
             .model(ChatCompletion.Model.GPT4oMini) // GPT4oMini or GPT_3_5_TURBO
             .messages(messageHistory)

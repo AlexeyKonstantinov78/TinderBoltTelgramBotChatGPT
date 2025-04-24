@@ -44,7 +44,6 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
 
   @Override
   public void onUpdateEventReceived(Update update) {
-    //TODO: основной функционал бота будем писать здесь
     String mess = getMessageText();
     // получаем данные от нажатой кнопки
     String key = getCallbackQueryButtonKey();
@@ -108,12 +107,19 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
             sendTextMessage("Цель знакомства");
             return;
           case 5:
+            String answer = "";
             me.goals = mess;
-
             System.out.println(me.toString());
             String aboutMyself = me.toString();
             Message msg = sendTextMessage("Подождите чат думает...");
-            String answer = chatGPT.sendMessage(loadPrompt("profile"), aboutMyself);
+            try {
+              answer = chatGPT.sendMessage(loadPrompt("profile"), aboutMyself);
+
+            } catch (Exception e) {
+              System.out.println(e.getMessage());
+              updateTextMessage(msg, "Что-то пошло не так");
+              return;
+            }
             updateTextMessage(msg, answer);
             return;
         }
@@ -146,11 +152,18 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
             return;
           case 5:
             me.goals = mess;
+            String answer = "";
 
             System.out.println(me.toString());
             String aboutFreand = mess;
             Message msg = sendTextMessage("Подождите чат думает...");
-            String answer = chatGPT.sendMessage(loadPrompt("opener"), aboutFreand);
+            try {
+              answer = chatGPT.sendMessage(loadPrompt("opener"), aboutFreand);
+            } catch (Exception e) {
+              System.out.println(e.getMessage());
+              updateTextMessage(msg, "Что-то пошло не так");
+              return;
+            }
             updateTextMessage(msg, answer);
             return;
         }
@@ -158,17 +171,33 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
       }
 
       if (currentMode == DialogMode.GPT && !isMessageCommand()) {
+        String send = "";
         String prompt = loadPrompt("gpt");
         Message msg = sendTextMessage("Подождите чат думает...");
-        String send = chatGPT.sendMessage(prompt, mess);
+        try {
+          send = chatGPT.sendMessage(prompt, mess);
+        } catch (Exception e) {
+          System.out.println(e.getMessage());
+          updateTextMessage(msg, "Что-то пошло не так");
+          return;
+        }
         updateTextMessage(msg, send);
         mainMenu();
         return;
       }
 
       if (currentMode == DialogMode.DATE && !isMessageCommand()) {
+        String send = "";
         Message msg = sendTextMessage("Подождите чат думает...");
-        String send = chatGPT.addMessage(mess);
+        try {
+          send = chatGPT.addMessage(mess);
+
+        } catch (Exception e) {
+          System.out.println(e.getMessage());
+          updateTextMessage(msg, "Что-то пошло не так");
+          return;
+        }
+
         updateTextMessage(msg, send);
         mainMenu();
         return;
@@ -213,9 +242,15 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
       if (currentMode == DialogMode.MESSAGE && key.startsWith("message_")) {
         String promt = loadPrompt(key);
         String userChatHistory = String.join("\n\n", list);
-
+        String answer = "";
         Message msg = sendTextMessage("Подождите чат думает..."); // техническое сообщение
-        String answer = chatGPT.sendMessage(promt, userChatHistory);
+        try {
+          answer = chatGPT.sendMessage(promt, userChatHistory);
+        } catch (Exception e) {
+          System.out.println(e.getMessage());
+          updateTextMessage(msg, "Что-то пошло не так");
+          return;
+        }
         updateTextMessage(msg, answer); // изменяет тех сообщение на полученное
         //sendTextMessage(answer);
         list.add(answer);
