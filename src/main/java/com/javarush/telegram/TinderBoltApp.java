@@ -52,7 +52,13 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
     String mess = getMessageText();
     // получаем данные от нажатой кнопки
     String key = getCallbackQueryButtonKey();
-    if (update.getMessage().getFrom().getFirstName().equals("Group")) {
+    if (update.getMessage().getChat().getType().equals("supergroup")) {
+      log.info("Group mess: " + mess);
+      log.info("Group key: " + key);
+      return;
+    }
+
+    if (update.getMessage() == null && update.getChatMember().getChat().getType().equals("channel")) {
       log.info("Group mess: " + mess);
       log.info("Group key: " + key);
       return;

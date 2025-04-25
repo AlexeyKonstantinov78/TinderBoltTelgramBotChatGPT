@@ -53,7 +53,7 @@ public class MultiSessionTelegramBot extends TelegramLongPollingBot {
 
   @Override
   public final void onUpdateReceived(Update updateEvent) {
-    log.info(updateEvent.toString());
+    //log.info(updateEvent.toString());
     try {
       this.updateEvent.set(updateEvent);
       onUpdateEventReceived(this.updateEvent.get());
