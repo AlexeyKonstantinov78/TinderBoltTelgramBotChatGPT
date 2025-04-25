@@ -1,6 +1,8 @@
 package com.javarush.telegram;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -15,9 +17,12 @@ import java.util.Properties;
 
 @Slf4j
 public class TinderBoltApp extends MultiSessionTelegramBot {
+  private static final Logger log = LoggerFactory.getLogger(TinderBoltApp.class);
   public static String TELEGRAM_BOT_NAME; //TODO: добавь имя бота в кавычках
   public static String TELEGRAM_BOT_TOKEN; //TODO: добавь токен бота в кавычках
   public static String OPEN_AI_TOKEN; //TODO: добавь токен ChatGPT в кавычках
+  public static String DEEPSEEK_BOT_NAME; //TODO: добавь имя бота в кавычках
+  public static String DEEPSEEK_BOT_TOKEN; //TODO: добавь токен бота в кавычках
   private ChatGPTService chatGPT;
   private DialogMode currentMode = null;
   private ArrayList<String> list = new ArrayList<>();
@@ -33,6 +38,8 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
       TELEGRAM_BOT_NAME = props.getProperty("telegram.bot.name");
       TELEGRAM_BOT_TOKEN = props.getProperty("telegram.bot.token");
       OPEN_AI_TOKEN = props.getProperty("open.ai.token");
+      DEEPSEEK_BOT_TOKEN = props.getProperty("deepseek.ai.token");
+      DEEPSEEK_BOT_NAME = props.getProperty("deepseek.ai.name");
 
     } catch (IOException e) {
       log.error("Ошибка загрузки config.properties: " + e.getMessage());
@@ -52,17 +59,17 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
     String mess = getMessageText();
     // получаем данные от нажатой кнопки
     String key = getCallbackQueryButtonKey();
-    if (update.getMessage().getChat().getType().equals("supergroup")) {
-      log.info("Group mess: " + mess);
-      log.info("Group key: " + key);
-      return;
-    }
-
-    if (update.getMessage() == null && update.getChatMember().getChat().getType().equals("channel")) {
-      log.info("Group mess: " + mess);
-      log.info("Group key: " + key);
-      return;
-    }
+//    if (update.getMessage().getChat().getType().equals("supergroup")) {
+//      log.info("Group mess: " + mess);
+//      log.info("Group key: " + key);
+//      return;
+//    }
+//
+//    if (update.getMessage() == null && update.getChatMember().getChat().getType().equals("channel")) {
+//      log.info("Group mess: " + mess);
+//      log.info("Group key: " + key);
+//      return;
+//    }
 
     if (currentMode != null) {
       log.info("currentMode: " + currentMode.name());
@@ -101,6 +108,10 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
         }
         case "/gpt" -> {
           chatGptMode();
+          return;
+        }
+        case "/deepseek" -> {
+          chatDeepseek();
           return;
         }
       }
@@ -202,6 +213,7 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
         Message msg = sendTextMessage("Подождите чат думает...");
         try {
           send = chatGPT.sendMessage(prompt, mess);
+          log.info("Message gpt: " + send);
         } catch (Exception e) {
           log.error(e.getMessage());
           //System.out.println(e.getMessage());
@@ -288,6 +300,13 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
     }
   }
 
+  private void chatDeepseek() {
+    currentMode = DialogMode.DEEPSEEK;
+//    sendPhotoMessage("deepseek");
+//    String text = loadMessage("deepseek");
+    sendTextMessage("DeepSeek");
+  }
+
   private void addProfileTinder() {
     currentMode = DialogMode.PROFILE;
     me = new UserInfo();
@@ -363,6 +382,7 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
             "переписка от вашего имени \uD83D\uDE08", "/message",
             "переписка со звездами \uD83D\uDD25", "/date",
             "задать вопрос чату GPT \uD83E\uDDE0", "/gpt",
+            "задать вопрос чату Deepseek \uD83E\uDDE0", "/deepseek",
             "Стоп", "/stop"
     );
   }
